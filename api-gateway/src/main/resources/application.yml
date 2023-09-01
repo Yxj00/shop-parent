@@ -1,0 +1,31 @@
+server:
+  port: 9000
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    sentinel:
+      transport:
+        dashboard: localhost:8080
+        port: 9999
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+    gateway:
+      discovery:
+        locator:
+          enabled: true   # 让gateway可以发现nacos中的微服务
+      routes: #新的路由规则
+        - id: product_route   #路由名称，保证唯一
+          uri: lb://product-service  #将符合条件的请求转发到那个微服务，lb表示对服务进行负载均衡
+          predicates:
+            - Path=/product-serv/**   #拦截哪些请求
+          filters:
+            - StripPrefix=2,name      #在转发请求之前，将拦截到的路径的第一层路径删除掉
+        - id: order_route
+          uri: lb://order-service
+          predicates:
+            - Path=/order-serv/**
+          filters:
+            - StripPrefix=1
+            - Time=true
